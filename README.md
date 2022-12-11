@@ -16,7 +16,7 @@ To create the WordPress site, the script runs the docker-compose command to down
 
 To run this script, the user needs to have docker and docker-compose installed on their system. The user can provide the site name as a command-line argument when running the script, for example:
 
-python create_wordpress_site.py my_site
+-> python create_wordpress_site.py my_site
 
 Step 3 :
 Here is a sample script in Python to create a LEMP stack (Linux, Nginx, MySQL, and PHP) running inside Docker containers using Docker Compose:
@@ -37,7 +37,7 @@ To create the /etc/hosts entry, the script opens the /etc/hosts file in append m
 
 To run this script, the user needs to provide the site name as a command-line argument when running the script, for example:
 
-python create_hosts_entry.py example.com
+-> python create_hosts_entry.py example.com
 
 This will create an entry in the /etc/hosts file for example.com pointing to localhost. Note that the user needs to have the appropriate permissions to write to the /etc/hosts file.
 
@@ -65,11 +65,11 @@ If the command is enable, the script runs the docker-compose up -d command to st
 
 To run this script, the user needs to have Docker and Docker Compose installed on their system. The script also assumes that the user has created the Docker Compose configuration file and built the images for the containers. To run the script, the user needs to provide the subcommand as a command-line argument, for example:
 
-python enable_disable_site.py enable
+-> python enable_disable_site.py enable
 
 This will start the Docker containers for the site, enabling it. To disable the site, the user can run the script with the disable subcommand, for example:
 
-python enable_disable_site.py disable
+-> python enable_disable_site.py disable
 
 This will stop the Docker containers for the site, disabling it.
 
@@ -84,7 +84,7 @@ If the command is delete, the script runs the docker-compose down --rmi all --vo
 
 To run this script, the user needs to have Docker and Docker Compose installed on their system. The script also assumes that the user has created the Docker Compose configuration file and built the images for the containers. To run the script, the user needs to provide the delete subcommand as a command-line argument, for example:
 
-python delete_site.py delete
+-> python delete_site.py delete
 
 This will delete the Docker containers and local files for the site. Note that this operation cannot be undone, so the user should use it with caution.
 
