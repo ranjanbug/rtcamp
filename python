@@ -1,0 +1,211 @@
+import argparse
+import subprocess
+import sys
+import os
+import webbrowser
+import platform
+
+# Check if docker is installed
+try:
+    subprocess.run(["docker", "--version"], check=True)
+except subprocess.CalledProcessError:
+    # Install docker
+    subprocess.run(["apt-get", "update"], check=True)
+    subprocess.run(["apt-get", "install", "-y", "docker.io"], check=True)
+
+# Check if docker-compose is installed
+try:
+    subprocess.run(["docker-compose", "--version"], check=True)
+except subprocess.CalledProcessError:
+    # Install docker-compose
+    subprocess.run(["curl", "-L", "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)", "-o", "/usr/local/bin/docker-compose"], check=True)
+    subprocess.run(["chmod", "+x", "/usr/local/bin/docker-compose"], check=True)
+
+# Parse the site name from the command-line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("site_name")
+args = parser.parse_args()
+
+# Set the site name
+site_name = args.site_name
+
+# Set the WordPress version
+wp_version = "latest"
+
+# Create a directory for the site
+os.makedirs(site_name)
+
+# Change to the site directory
+os.chdir(site_name)
+
+# Download WordPress
+subprocess.run(["wp", "core", "download", "--version=" + wp_version], check=True)
+
+# Generate a random password for the admin user
+wp_pass = subprocess.run(["wp", "random", "password"], capture_output=True, text=True).stdout.strip()
+
+# Install WordPress
+subprocess.run(["wp", "core", "install", "--url=" + site_name, "--title=" + site_name, "--admin_user=admin", "--admin_password=" + wp_pass, "--admin_email=admin@" + site_name + ".com"], check=True)
+
+# Print the WordPress password
+print("WordPress password: " + wp_pass)
+
+
+# Set the name of the network
+network_name = "lemp-network"
+
+# Set the name of the MySQL container
+mysql_container_name = "mysql"
+
+# Set the name of the Nginx container
+nginx_container_name = "nginx"
+
+# Set the name of the PHP-FPM container
+php_fpm_container_name = "php-fpm"
+
+# Set the root password for MySQL
+mysql_root_password = "password"
+
+# Set the database name, username, and password for WordPress
+wp_db_name = "wp_database"
+wp_db_user = "wp_user"
+wp_db_password = "wp_password"
+
+# Create the network
+subprocess.run(["docker", "network", "create", "--driver=bridge", network_name], check=True)
+
+# Create the MySQL container
+subprocess.run(["docker", "run", "--name=" + mysql_container_name, "--network=" + network_name, "-e", "MYSQL_ROOT_PASSWORD=" + mysql_root_password, "-d", "mysql:5.7"], check=True)
+
+# Create the Nginx container
+subprocess.run(["docker", "run", "--name=" + nginx_container_name, "--network=" + network_name, "-p", "80:80", "-v", "/var/www/html:/var/www/html", "-d", "nginx:1.17"], check=True)
+
+# Create the PHP-FPM container
+subprocess.run(["docker", "run", "--name=" + php_fpm_container_name, "--network=" + network_name, "-v", "/var/www/html:/var/www/html", "-d", "php:7.4-fpm"], check=True)
+
+# Print the MySQL connection information
+print("MySQL connection information:")
+print("  Host: " + mysql_container_name)
+print("  Port: 3306")
+print("  Database: " + wp_db_name)
+print("  User: " + wp_db_user)
+print("  Password: " + wp_db_password)
+
+
+# Parse the site name from the command-line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("site_name")
+args = parser.parse_args()
+
+# Set the site name
+site_name = args.site_name
+
+# Check if the user is root
+if os.geteuid() != 0:
+    print("This script must be run as root.")
+    sys.exit(1)
+
+# Check if the /etc/hosts file exists
+if not os.path.exists("/etc/hosts"):
+    print("The /etc/hosts file does not exist.")
+    sys.exit(1)
+
+# Check if the site name already exists in the /etc/hosts file
+with open("/etc/hosts") as hosts_file:
+    if site_name in hosts_file.read():
+        print("The site name already exists in the /etc/hosts file.")
+        sys.exit(1)
+
+# Append the site name to the /etc/hosts file
+with open("/etc/hosts", "a") as hosts_file:
+    hosts_file.write("\n127.0.0.1\t" + site_name + "\n")
+
+# Print a success message
+print("The /etc/hosts entry for " + site_name + " was added successfully.")
+
+
+# Parse the site name from the command-line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("site_name")
+args = parser.parse_args()
+
+# Set the site name
+site_name = args.site_name
+
+# Check if the site is up and healthy
+try:
+    subprocess.run(["curl", "-I", site_name], check=True)
+except subprocess.CalledProcessError:
+    print("The site is not responding. Please check that the site is running and try again.")
+    sys.exit(1)
+
+# Prompt the user to open the site in a browser
+if platform.system() == "Windows":
+    os.system("start " + site_name)
+elif platform.system() == "Darwin":
+    subprocess.run(["open", site_name])
+else:
+    webbrowser.open(site_name)
+
+
+# Parse the subcommand and the site name from the command-line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("subcommand")
+parser.add_argument("site_name")
+args = parser.parse_args()
+
+# Set the subcommand and the site name
+subcommand = args.subcommand
+site_name = args.site_name
+
+# Check if the subcommand is valid
+if subcommand not in ["enable", "disable"]:
+    print("Invalid subcommand. Please specify 'enable' or 'disable'.")
+    sys.exit(1)
+
+# Check if the site directory exists
+if not os.path.exists(site_name):
+    print("The site directory does not exist.")
+    sys.exit(1)
+
+# Change to the site directory
+os.chdir(site_name)
+
+# Enable/disable the site using docker-compose
+if subcommand == "enable":
+    subprocess.run(["docker-compose", "up", "-d"], check=True)
+else:
+    subprocess.run(["docker-compose", "down"], check=True)
+
+
+# Parse the subcommand and the site name from the command-line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("subcommand")
+parser.add_argument("site_name")
+args = parser.parse_args()
+
+# Set the subcommand and the site name
+subcommand = args.subcommand
+site_name = args.site_name
+
+# Check if the subcommand is valid
+if subcommand != "delete":
+    print("Invalid subcommand. Please specify 'delete'.")
+    sys.exit(1)
+
+# Check if the site directory exists
+if not os.path.exists(site_name):
+    print("The site directory does not exist.")
+    sys.exit(1)
+
+# Change to the site directory
+os.chdir(site_name)
+
+# Stop and remove the containers using docker-compose
+subprocess.run(["docker-compose", "down"], check=True)
+
+# Delete the site directory
+os.rmdir(site_name)
+
+# Print a success message
+print("The site was deleted successfully.")
